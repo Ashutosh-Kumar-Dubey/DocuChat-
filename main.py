@@ -104,3 +104,28 @@ async def rag_query_pdf_ai(ctx: inngest.Context):
 app = FastAPI()
 
 inngest.fast_api.serve(app, inngest_client, [rag_ingest_pdf, rag_query_pdf_ai])
+from pydantic import BaseModel
+class QueryRequest(BaseModel):
+    question: str
+    top_k: int = 5
+
+@app.post('/api/query')
+async def api_query(req: QueryRequest):
+    query_vec = embed_texts([req.question])[0]
+    store = QdrantStorage()
+    found = store.search(query_vec, req.top_k)
+    context_block = '
+
+'.join(f'- {c}' for c in found['contexts'])
+    user_content = ('Use the following context to answer the question.
+
+Context:
+' + context_block + '
+
+Question: ' + req.question + '
+Answer concisely using the context above.')
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv('GROQ_API_KEY'), base_url='https://api.groq.com/openai/v1')
+    res = client.chat.completions.create(model='groq/compound', max_tokens=1024, temperature=0.2, messages=[{'role': 'system', 'content': 'You answer questions using only the provided context.'}, {'role': 'user', 'content': user_content}])
+    answer = res.choices[0].message.content.strip()
+    return {'answer': answer, 'sources': found['sources'], 'num_contexts': len(found['contexts'])}

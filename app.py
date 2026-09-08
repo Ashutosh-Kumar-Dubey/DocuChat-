@@ -163,10 +163,16 @@ with st.container(border=True):
 
                 if submitted and question.strip():
                     with st.spinner("Analyzing vectors..."):
-                        event_id = asyncio.run(send_rag_query_event(question.strip(), int(top_k)))
-                        output = wait_for_run_output(event_id)
-                        answer = output.get("answer", "")
-                        sources = output.get("sources", [])
+                        import requests
+                        backend_url = os.getenv("BACKEND_URL", "https://docuchat-backend-rlyw.onrender.com")
+                        resp = requests.post(f"{backend_url}/api/query", json={"question": question.strip(), "top_k": int(top_k)})
+                        if resp.status_code == 200:
+                            output = resp.json()
+                            answer = output.get("answer", "")
+                            sources = output.get("sources", [])
+                        else:
+                            answer = f"Error: {resp.text}"
+                            sources = []
 
                     st.info(answer or "No answer found in context.")
 
