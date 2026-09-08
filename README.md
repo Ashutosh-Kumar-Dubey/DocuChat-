@@ -16,6 +16,7 @@ The system combines **LlamaIndex, Hugging Face embeddings, Qdrant vector search,
 
 > **Application URL:** [https://doc2chat-ai.streamlit.app/](https://doc2chat-ai.streamlit.app/)
 
+
 ---
 
 ## Overview
@@ -43,7 +44,7 @@ The application uses a decoupled cloud architecture consisting of independent fr
 * **Backend:** FastAPI *(Deployed on Render)*
 * **Vector Database:** Qdrant Cloud
 * **Embedding Service:** Hugging Face Serverless Inference API
-* **Embedding Model:** ll-MiniLM-L6-v2
+* **Embedding Model:** `all-MiniLM-L6-v2`
 * **LLM Provider:** Groq
 
 ### System Flow
@@ -87,3 +88,28 @@ graph TD
     API -->|Answer + References| UI
     UI --> User
 ```
+
+---
+
+## Running Locally
+
+To run the full dual-service architecture on your local machine, you will need two terminal windows.
+
+### 1. Start the FastAPI Backend
+```bash
+# Activate your virtual environment
+.venv\Scripts\activate
+
+# Start the API server on port 8000
+uvicorn main:app --reload --port 8000
+```
+
+### 2. Start the Streamlit Frontend
+```bash
+# In a second terminal window, activate the environment
+.venv\Scripts\activate
+
+# Launch the user interface
+streamlit run app.py
+```
+*Note: The frontend will automatically open in your browser at `http://localhost:8501`.*
