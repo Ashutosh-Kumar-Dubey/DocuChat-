@@ -1,12 +1,9 @@
---extra-index-url https://download.pytorch.org/whl/cpu
 fastapi
 uvicorn
-streamlit
 inngest
 python-dotenv
 qdrant-client
 openai
 llama-index-core
 llama-index-readers-file
-sentence-transformers
-torch
+requests
