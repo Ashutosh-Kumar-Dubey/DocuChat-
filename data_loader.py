@@ -1,7 +1,7 @@
 import os
-import requests
 from llama_index.readers.file import PDFReader
 from llama_index.core.node_parser import SentenceSplitter
+from openai import OpenAI
 
 EMBED_DIM = 384
 splitter = SentenceSplitter(chunk_size=1000, chunk_overlap=200)
@@ -19,9 +19,6 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     if not hf_token:
         raise ValueError('HF_TOKEN environment variable is not set!')
         
-    api_url = 'https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2'
-    headers = {'Authorization': f'Bearer {hf_token}'}
-    
-    response = requests.post(api_url, headers=headers, json={'inputs': texts, 'options': {'wait_for_model': True}})
-    response.raise_for_status()
-    return response.json()
+    client = OpenAI(api_key=hf_token, base_url='https://router.huggingface.co/hf-inference/v1')
+    response = client.embeddings.create(model='sentence-transformers/all-MiniLM-L6-v2', input=texts)
+    return [r.embedding for r in response.data]
