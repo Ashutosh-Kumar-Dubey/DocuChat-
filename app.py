@@ -27,7 +27,6 @@ st.markdown("""
 
 
 # --- BACKEND LOGIC ---
-@st.cache_resource
 def get_inngest_client() -> inngest.Inngest:
     return inngest.Inngest(app_id="rag_app", is_production=os.getenv('INNGEST_EVENT_KEY') is not None)
 
