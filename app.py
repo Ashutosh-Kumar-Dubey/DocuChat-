@@ -121,9 +121,15 @@ with st.container(border=True):
             if uploaded is not None:
                 with st.spinner("Encrypting and indexing..."):
                     path = save_uploaded_pdf(uploaded)
-                    asyncio.run(send_rag_ingest_event(path))
+                    import requests
+                    backend_url = os.getenv("BACKEND_URL", "https://docuchat-backend-rlyw.onrender.com")
+                    with open(path, "rb") as f:
+                        resp = requests.post(f"{backend_url}/api/upload", files={"file": (uploaded.name, f)})
                     time.sleep(0.3)
-                st.success(f"Successfully indexed: {path.name}")
+                if resp.status_code == 200:
+                    st.success(f"Successfully indexed: {path.name}")
+                else:
+                    st.error(f"Failed to index: {resp.text}")
 
             st.write("---")
 

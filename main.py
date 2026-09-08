@@ -126,3 +126,21 @@ async def api_query(req: QueryRequest):
     res = client.chat.completions.create(model='groq/compound', max_tokens=1024, temperature=0.2, messages=[{'role': 'system', 'content': 'You answer questions using only the provided context.'}, {'role': 'user', 'content': user_content}])
     answer = res.choices[0].message.content.strip()
     return {'answer': answer, 'sources': found['sources'], 'num_contexts': len(found['contexts'])}
+
+from fastapi import UploadFile, File
+import tempfile
+import uuid
+
+@app.post('/api/upload')
+async def api_upload(file: UploadFile = File(...)):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    
+    chunks = load_and_chunk_pdf(tmp_path)
+    vecs = embed_texts(chunks)
+    ids = [str(uuid.uuid5(uuid.NAMESPACE_URL, f"{file.filename}:{i}")) for i in range(len(chunks))]
+    payloads = [{"source": file.filename, "text": chunks[i]} for i in range(len(chunks))]
+    QdrantStorage().upsert(ids, vecs, payloads)
+    os.remove(tmp_path)
+    return {"status": "success", "ingested": len(chunks)}
