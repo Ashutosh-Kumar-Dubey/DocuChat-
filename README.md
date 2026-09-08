@@ -1,91 +1,42 @@
-# Document AI Assistant (Enterprise RAG Pipeline)
+# Document AI Assistant
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
-![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)
-![Qdrant](https://img.shields.io/badge/Qdrant-Vector_DB-EF1936?style=for-the-badge&logo=qdrant)
-![Inngest](https://img.shields.io/badge/Inngest-Event_Driven-1B1B1B?style=for-the-badge)
+An enterprise-grade Retrieval-Augmented Generation (RAG) platform designed to extract instant, accurate insights from secure PDF documents. Built with a deeply optimized, lightweight microservices architecture.
 
-An enterprise-grade **Retrieval-Augmented Generation (RAG)** application. This platform allows users to securely upload private PDF documents, embed them into a local vector database, and query them instantly using AI to extract actionable insights.
+## Architecture Overview
 
----
+The system is separated into a serverless frontend and a high-performance backend REST API, connected to cloud-native vector and inference engines.
 
-## System Architecture
+- **Frontend:** Streamlit (deployed on Streamlit Community Cloud)
+- **Backend API:** FastAPI (deployed on Render)
+- **Vector Database:** Qdrant Cloud
+- **Embedding Engine:** Hugging Face Serverless Inference API (\ll-MiniLM-L6-v2\)
+- **LLM Engine:** Groq API (\groq/compound\)
 
-This project is built using a fully decoupled, asynchronous, event-driven architecture. By utilizing **Inngest** for background job queues, the Streamlit frontend remains perfectly responsive even when processing massive 100+ page PDFs.
+### System Flow
+1. **Ingestion:** Secure PDFs are uploaded via the Streamlit frontend and securely transmitted to the FastAPI backend.
+2. **Processing:** The backend extracts the text, generates vector embeddings via Hugging Face's enterprise router, and indexes them in Qdrant Cloud.
+3. **Querying:** User queries are embedded and searched against Qdrant. The relevant context is dynamically injected into a prompt and processed by Groq's ultra-low-latency LLM network to generate a highly accurate, deterministic response.
 
-```mermaid
-flowchart TD
-    UI[Streamlit Frontend]
-    IN[Inngest Job Queue]
-    FA[FastAPI Backend]
-    LD[LlamaIndex]
-    EM[Sentence-Transformers]
-    LLM[Groq AI]
-    QD[(Qdrant Vector DB)]
+## Core Features
+- **Zero-Latency Embeddings:** Completely offloads heavy PyTorch tensor operations to the Hugging Face Cloud, preventing server OOM crashes.
+- **Stateless Architecture:** The backend API remains entirely stateless, allowing instantaneous cold boots on heavily constrained server environments.
+- **Reference Tracking:** Automatically tracks and returns exact context chunks used to generate the LLM response to prevent hallucinations.
+- **B2B UI/UX:** A highly responsive, single-page application built entirely in dark mode with a professional lavender accent palette.
 
-    UI -->|Upload PDF / Ask Question| IN
-    IN -->|Trigger Task| FA
-    FA -->|Read Document| LD
-    LD -->|Embed Text| EM
-    EM -->|Save Vectors| QD
-    QD -->|Return Similar Chunks| FA
-    FA -->|Send Context| LLM
-    LLM -->|Generate Answer| UI
-```
+## Project Structure
+\\\	ext
++-- app.py                 # Streamlit frontend UI
++-- main.py                # FastAPI backend routing and endpoints
++-- data_loader.py         # PDF parsing and Hugging Face API integration
++-- vector_db.py           # Qdrant Database client and schema management
++-- requirements.txt       # Frontend dependencies
++-- backend-requirements.txt # Backend dependencies
+\\\`n
+## Environment Variables
+The following secrets are required for deployment:
+- \QDRANT_URL\: The REST API URL of your Qdrant Cloud cluster.
+- \QDRANT_API_KEY\: Authentication key for Qdrant.
+- \GROQ_API_KEY\: API key for Groq's LLM routing.
+- \HF_TOKEN\: Hugging Face read token for inference endpoints.
+- \BACKEND_URL\: The deployed URL of the FastAPI server (required on the frontend).
 
----
-
-## Complete Tech Stack
-
-### Frontend
-* **Streamlit:** Python-based UI framework styled with a custom dark-mode B2B SaaS theme configuration.
-
-### Backend & Orchestration
-* **FastAPI & Uvicorn:** High-performance web framework acting as the core orchestrator.
-* **Inngest:** Event-driven background job queue ensuring robust error handling, automatic retries, and non-blocking UI interactions.
-
-### Data & AI Layer
-* **LlamaIndex:** Used for PDF ingestion and intelligent overlapping sentence chunking.
-* **Sentence-Transformers:** Local, zero-cost vector embedding generation utilizing the HuggingFace `all-MiniLM-L6-v2` model.
-* **Groq API:** Blazing fast LLM inference running the `groq/compound` model via the standard OpenAI SDK.
-* **Qdrant:** High-performance Vector Database operating in persistent local storage mode.
-
----
-
-## How to Run Locally
-
-### 1. Prerequisites
-Ensure you have Python 3.12+ installed.
-Create a `.env` file in the root directory and add your Groq API Key:
-```env
-GROQ_API_KEY=your_api_key_here
-```
-
-### 2. Installation
-Create a virtual environment and install the required dependencies:
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 3. Starting the Services
-This application requires three separate processes running simultaneously. Open three terminal windows and run the following:
-
-**Terminal 1 (Background Queue):**
-```bash
-npx inngest-cli@latest dev -u http://127.0.0.1:8000/api/inngest
-```
-
-**Terminal 2 (FastAPI Backend):**
-```bash
-.venv\Scripts\activate
-uvicorn main:app --reload --port 8000
-```
-
-**Terminal 3 (Streamlit Frontend):**
-```bash
-.venv\Scripts\activate
-streamlit run app.py
-```
