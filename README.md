@@ -4,6 +4,12 @@ An enterprise-grade Retrieval-Augmented Generation (RAG) platform designed to ex
 
 ---
 
+##  Live Demo
+**Access the live application here:** https://doc2chat-ai.streamlit.app/
+
+
+---
+
 ## Architecture Overview
 
 The system is separated into a serverless frontend and a high-performance backend REST API, connected to cloud-native vector and inference engines.
