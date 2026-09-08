@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+if "indexed_files" not in st.session_state:
+    st.session_state.indexed_files = []
+
 st.set_page_config(page_title="Document AI Assistant", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -17,13 +20,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-def save_uploaded_pdf(file) -> Path:
-    uploads_dir = Path("uploads")
-    uploads_dir.mkdir(parents=True, exist_ok=True)
-    file_path = uploads_dir / file.name
-    file_path.write_bytes(file.getbuffer())
-    return file_path
 
 st.markdown("<h1 style='text-align: center; color: #D8B4E2;'>Document AI Assistant</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #9A8C98; margin-bottom: 30px;'>Manage your private knowledge base and extract AI insights instantly.</p>", unsafe_allow_html=True)
@@ -37,29 +33,26 @@ with st.container(border=True):
             uploaded = st.file_uploader("Upload secure PDF", type=["pdf"], accept_multiple_files=False)
             if uploaded:
                 with st.spinner("Encrypting and indexing..."):
-                    path = save_uploaded_pdf(uploaded)
                     backend_url = os.getenv("BACKEND_URL", "https://docuchat-backend-rlyw.onrender.com")
-                    with open(path, "rb") as f:
-                        resp = requests.post(f"{backend_url}/api/upload", files={"file": (uploaded.name, f)})
+                    resp = requests.post(f"{backend_url}/api/upload", files={"file": (uploaded.name, uploaded.getvalue())})
                     time.sleep(0.3)
                 if resp.status_code == 200:
-                    st.success(f"Successfully indexed: {path.name}")
+                    st.success(f"Successfully indexed: {uploaded.name}")
+                    if uploaded.name not in st.session_state.indexed_files:
+                        st.session_state.indexed_files.append(uploaded.name)
                 else:
                     st.error(f"Failed to index: {resp.text}")
 
             st.write("---")
-            st.markdown('#### Database Index')
-            uploads_dir = Path("uploads")
-            if uploads_dir.exists():
-                files = list(uploads_dir.glob("*.pdf"))
-                if files:
-                    for f in reversed(files[-5:]):
-                        st.caption(f"• **Indexed:** {f.name}")
-                    st.write("")
-                    storage_gb = round(len(files) * 0.2, 1)
-                    st.progress(min(storage_gb / 10.0, 1.0), text=f"Storage Capacity: {storage_gb} GB / 10 GB")
-                else:
-                    st.caption("No documents currently indexed.")
+            st.markdown("#### Session Index")
+            if st.session_state.indexed_files:
+                for fname in reversed(st.session_state.indexed_files[-5:]):
+                    st.caption(f"• **Indexed:** {fname}")
+                st.write("")
+                storage_gb = round(len(st.session_state.indexed_files) * 0.2, 1)
+                st.progress(min(storage_gb / 10.0, 1.0), text=f"Session Capacity: {storage_gb} GB / 10 GB")
+            else:
+                st.caption("No documents currently indexed in this session.")
 
     with col2:
         st.markdown("<h3 style='color: #C8B6E6;'>Query Knowledge Base</h3>", unsafe_allow_html=True)
