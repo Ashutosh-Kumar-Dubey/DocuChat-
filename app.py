@@ -32,7 +32,7 @@ with st.container(border=True):
         with st.container(border=True):
             uploaded = st.file_uploader("Upload secure PDF", type=["pdf"], accept_multiple_files=False)
             if uploaded:
-                with st.spinner("Encrypting and indexing..."):
+                with st.spinner("Reading the document..."):
                     backend_url = os.getenv("BACKEND_URL", "https://docuchat-backend-rlyw.onrender.com")
                     resp = requests.post(f"{backend_url}/api/upload", files={"file": (uploaded.name, uploaded.getvalue())})
                     time.sleep(0.3)
@@ -52,7 +52,7 @@ with st.container(border=True):
                 storage_gb = round(len(st.session_state.indexed_files) * 0.2, 1)
                 st.progress(min(storage_gb / 10.0, 1.0), text=f"Session Capacity: {storage_gb} GB / 10 GB")
             else:
-                st.caption("No documents currently indexed in this session.")
+                st.caption("No documents currently  uploaded in this session.")
 
     with col2:
         st.markdown("<h3 style='color: #C8B6E6;'>Query Knowledge Base</h3>", unsafe_allow_html=True)
@@ -64,10 +64,10 @@ with st.container(border=True):
                     top_k = st.number_input("Retrieve chunks", min_value=1, max_value=20, value=5, step=1)
 
                 st.write("")
-                submitted = st.form_submit_button("Generate Analysis", use_container_width=True)
+                submitted = st.form_submit_button("Answer", use_container_width=True)
 
                 if submitted and question.strip():
-                    with st.spinner("Analyzing vectors..."):
+                    with st.spinner("Finding Answer..."):
                         backend_url = os.getenv("BACKEND_URL", "https://docuchat-backend-rlyw.onrender.com")
                         resp = requests.post(f"{backend_url}/api/query", json={"question": question.strip(), "top_k": int(top_k)})
                         if resp.status_code == 200:
@@ -78,7 +78,7 @@ with st.container(border=True):
                             answer = f"Error: {resp.text}"
                             sources = []
 
-                    st.info(answer or "No answer found in context.")
+                    st.info(answer or "No answer found.")
                     if sources:
                         st.write("")
                         with st.expander("View Referenced Sources"):
