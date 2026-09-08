@@ -1,10 +1,10 @@
-# 📄 Document AI Assistant
+# Document AI Assistant
 
-An enterprise-grade **Retrieval-Augmented Generation (RAG)** platform designed to extract instant, highly accurate insights from secure PDF documents. Built with a deeply optimized, highly scalable microservices architecture.
+An enterprise-grade Retrieval-Augmented Generation (RAG) platform designed to extract instant, highly accurate insights from secure PDF documents. Built with a deeply optimized, highly scalable microservices architecture.
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The system is separated into a serverless frontend and a high-performance backend REST API, connected to cloud-native vector and inference engines.
 
@@ -14,17 +14,15 @@ The system is separated into a serverless frontend and a high-performance backen
 - **Embedding Engine:** Hugging Face Serverless Inference API (`all-MiniLM-L6-v2`)
 - **LLM Engine:** Groq API (`groq/compound`)
 
-### 🌊 System Flow
+### System Flow
 
 ```mermaid
 graph TD
-    %% Styling
     classDef frontend fill:#D8B4E2,stroke:#7B2CBF,stroke-width:2px,color:#000
     classDef backend fill:#C8B6E6,stroke:#7B2CBF,stroke-width:2px,color:#000
     classDef database fill:#9A8C98,stroke:#000,stroke-width:2px,color:#fff
     classDef ai fill:#7B2CBF,stroke:#D8B4E2,stroke-width:2px,color:#fff
 
-    %% Nodes
     User([User])
     UI[Streamlit UI<br/>app.py]:::frontend
     API[FastAPI Backend<br/>main.py]:::backend
@@ -32,7 +30,6 @@ graph TD
     HF{Hugging Face API<br/>Embeddings}:::ai
     Groq{Groq API<br/>LLM Inference}:::ai
 
-    %% Connections
     User -- Uploads PDF / Asks Question --> UI
     UI -- HTTP POST /api/upload --> API
     UI -- HTTP POST /api/query --> API
@@ -49,30 +46,41 @@ graph TD
 
 ---
 
-## ✨ Core Features
+## Data Ingestion Pipeline
 
-- ⚡ **Zero-Latency Embeddings:** Completely offloads heavy PyTorch tensor operations to the Hugging Face Cloud, preventing server OOM crashes.
-- 🪶 **Stateless Architecture:** The backend API remains entirely stateless, allowing instantaneous cold boots on heavily constrained server environments.
-- 🎯 **Reference Tracking:** Automatically tracks and returns exact context chunks used to generate the LLM response to prevent hallucinations.
-- 🎨 **B2B UI/UX:** A highly responsive, single-page application built entirely in dark mode with a professional lavender accent palette.
+The platform features a highly optimized, synchronous data ingestion pipeline that processes documents in real-time without relying on external message queues (like Inngest or Celery):
+
+1. **Upload & Secure Transmission:** The user uploads a PDF via the Streamlit UI. The file is immediately streamed to the FastAPI backend via a secure `multipart/form-data` REST endpoint (`/api/upload`).
+2. **Text Extraction & Chunking:** The backend utilizes LlamaIndex to parse the PDF and intelligently split the text into overlapping chunks (1000 tokens per chunk with 200 token overlap) to preserve semantic context.
+3. **Cloud Vectorization:** Instead of taxing the local server's CPU with PyTorch, the chunks are sent to Hugging Face's Enterprise Router (`router.huggingface.co`). The `all-MiniLM-L6-v2` model generates 384-dimensional embeddings.
+4. **Database Upsertion:** The vectors, along with the raw text payload and UUID metadata, are permanently indexed in Qdrant Cloud for instantaneous semantic retrieval.
 
 ---
 
-## 📁 Project Structure
+## Core Features
+
+- **Zero-Latency Embeddings:** Completely offloads heavy tensor operations to the Hugging Face Cloud, preventing server OOM (Out of Memory) crashes.
+- **Stateless Architecture:** The backend API remains entirely stateless, allowing instantaneous cold boots on heavily constrained server environments.
+- **Reference Tracking:** Automatically tracks and returns exact context chunks used to generate the LLM response to prevent AI hallucinations.
+- **B2B UI/UX:** A highly responsive, single-page application built entirely in dark mode with a professional lavender accent palette.
+
+---
+
+## Project Structure
 
 ```text
-📦 Document-AI
-├── 📜 app.py                   # Streamlit frontend UI
-├── 📜 main.py                  # FastAPI backend routing and endpoints
-├── 📜 data_loader.py           # PDF parsing and Hugging Face API integration
-├── 📜 vector_db.py             # Qdrant Database client and schema management
-├── 📜 requirements.txt         # Frontend dependencies (Streamlit)
-└── 📜 backend-requirements.txt # Backend dependencies (FastAPI)
+Document-AI/
+├── app.py                   # Streamlit frontend UI
+├── main.py                  # FastAPI backend routing and endpoints
+├── data_loader.py           # PDF parsing and Hugging Face API integration
+├── vector_db.py             # Qdrant Database client and schema management
+├── requirements.txt         # Frontend dependencies (Streamlit)
+└── backend-requirements.txt # Backend dependencies (FastAPI, python-multipart)
 ```
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 The following secrets are required for deployment:
 
@@ -85,4 +93,4 @@ The following secrets are required for deployment:
 | `BACKEND_URL` | The deployed URL of the FastAPI server | Frontend (Streamlit) |
 
 ---
-*Built with ❤️ using Streamlit, FastAPI, and Groq.*
+*Built using Streamlit, FastAPI, Hugging Face, and Groq.*
