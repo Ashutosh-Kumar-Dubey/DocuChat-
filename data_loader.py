@@ -1,12 +1,17 @@
 from llama_index.readers.file import PDFReader
 from llama_index.core.node_parser import SentenceSplitter
-from sentence_transformers import SentenceTransformer
 
-# Load a fast, free local embedding model (downloads once automatically)
-embed_model = SentenceTransformer('all-MiniLM-L6-v2')
 EMBED_DIM = 384
-
 splitter = SentenceSplitter(chunk_size=1000, chunk_overlap=200)
+
+_embed_model = None
+
+def get_embed_model():
+    global _embed_model
+    if _embed_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embed_model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _embed_model
 
 def load_and_chunk_pdf(path: str):
     docs = PDFReader().load_data(file=path)
@@ -17,6 +22,5 @@ def load_and_chunk_pdf(path: str):
     return chunks
 
 def embed_texts(texts: list[str]) -> list[list[float]]:
-    # Generate embeddings entirely locally for free
-    embeddings = embed_model.encode(texts)
+    embeddings = get_embed_model().encode(texts)
     return embeddings.tolist()
