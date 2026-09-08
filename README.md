@@ -48,7 +48,7 @@ The application uses a decoupled cloud architecture consisting of independent fr
 
 ### System Flow
 
-`mermaid
+```mermaid
 graph TD
     User([User])
 
@@ -80,4 +80,4 @@ graph TD
     Groq -->|Generated Response| API
     API -->|Answer + References| UI
     UI --> User
-`
+```
