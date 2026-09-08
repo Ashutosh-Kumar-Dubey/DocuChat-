@@ -50,15 +50,21 @@ The application uses a decoupled cloud architecture consisting of independent fr
 
 ```mermaid
 graph TD
+    %% Styling
+    classDef frontend fill:#D8B4E2,stroke:#7B2CBF,stroke-width:2px,color:#000
+    classDef backend fill:#C8B6E6,stroke:#7B2CBF,stroke-width:2px,color:#000
+    classDef database fill:#9A8C98,stroke:#000,stroke-width:2px,color:#fff
+    classDef ai fill:#7B2CBF,stroke:#D8B4E2,stroke-width:2px,color:#fff
+
     User([User])
 
-    UI[Streamlit UI<br/>app.py]
-    API[FastAPI Backend<br/>main.py]
+    UI[Streamlit UI<br/>app.py]:::frontend
+    API[FastAPI Backend<br/>main.py]:::backend
 
-    Parser[LlamaIndex<br/>PDF Parsing & Chunking]
-    HF[Hugging Face<br/>Embedding API]
-    Q[(Qdrant Cloud<br/>Vector Database)]
-    Groq[Groq API<br/>LLM Inference]
+    Parser[LlamaIndex<br/>PDF Parsing & Chunking]:::ai
+    HF[Hugging Face<br/>Embedding API]:::ai
+    Q[(Qdrant Cloud<br/>Vector Database)]:::database
+    Groq[Groq API<br/>LLM Inference]:::ai
 
     User -->|Upload PDF| UI
     User -->|Ask Question| UI
