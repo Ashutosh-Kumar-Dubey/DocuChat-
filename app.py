@@ -40,7 +40,7 @@ with st.container(border=True):
                     path = save_uploaded_pdf(uploaded)
                     backend_url = os.getenv("BACKEND_URL", "https://docuchat-backend-rlyw.onrender.com")
                     with open(path, "rb") as f:
-                        resp = requests.post(f{backend_url}/api/upload", files={"file": (uploaded.name, f)})
+                        resp = requests.post(f"{backend_url}/api/upload", files={"file": (uploaded.name, f)})
                     time.sleep(0.3)
                 if resp.status_code == 200:
                     st.success(f"Successfully indexed: {path.name}")
@@ -53,7 +53,7 @@ with st.container(border=True):
             if uploads_dir.exists():
                 files = list(uploads_dir.glob("*.pdf"))
                 if files:
-                    for f in reversed(files[-5]):
+                    for f in reversed(files[-5:]):
                         st.caption(f"• **Indexed:** {f.name}")
                     st.write("")
                     storage_gb = round(len(files) * 0.2, 1)
