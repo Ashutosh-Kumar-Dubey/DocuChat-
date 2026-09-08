@@ -19,6 +19,16 @@ class QdrantStorage:
                 vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
             )
 
+    def clear(self):
+        try:
+            self.client.delete_collection(self.collection)
+            self.client.create_collection(
+                collection_name=self.collection,
+                vectors_config=VectorParams(size=384, distance=Distance.COSINE),
+            )
+        except:
+            pass
+
     def upsert(self, ids, vectors, payloads):
         points = [PointStruct(id=ids[i], vector=vectors[i], payload=payloads[i]) for i in range(len(ids))]
         self.client.upsert(self.collection, points=points)

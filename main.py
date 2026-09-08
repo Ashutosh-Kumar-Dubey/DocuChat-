@@ -52,6 +52,7 @@ async def api_upload(file: UploadFile = File(...)):
     ids = [str(uuid.uuid5(uuid.NAMESPACE_URL, f"{file.filename}:{i}")) for i in range(len(chunks))]
     payloads = [{"source": file.filename, "text": chunks[i]} for i in range(len(chunks))]
     
+    QdrantStorage().clear()
     QdrantStorage().upsert(ids, vecs, payloads)
     os.remove(tmp_path)
     return {"status": "success", "ingested": len(chunks)}
