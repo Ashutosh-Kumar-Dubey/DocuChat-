@@ -7,3 +7,4 @@ openai
 llama-index-core
 llama-index-readers-file
 requests
+python-multipart
