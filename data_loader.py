@@ -14,14 +14,13 @@ def load_and_chunk_pdf(path: str):
         chunks.extend(splitter.split_text(t))
     return chunks
 
+from fastembed import TextEmbedding
+
+# Loads the exact same 384-dimensional model locally using lightweight ONNX runtime
+embedding_model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
 def embed_texts(texts: list[str]) -> list[list[float]]:
-    hf_token = os.getenv('HF_TOKEN')
-    if not hf_token:
-        raise ValueError('HF_TOKEN environment variable is not set!')
-        
-    api_url = 'https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction'
-    headers = {'Authorization': f'Bearer {hf_token}'}
-    
-    response = requests.post(api_url, headers=headers, json={'inputs': texts, 'options': {'wait_for_model': True}})
-    response.raise_for_status()
-    return response.json()
+    if not texts:
+        return []
+    embeddings = list(embedding_model.embed(texts))
+    return [e.tolist() for e in embeddings]

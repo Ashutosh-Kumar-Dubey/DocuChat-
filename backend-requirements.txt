@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-inngest
+fastembed
 python-dotenv
 qdrant-client
 openai
